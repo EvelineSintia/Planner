@@ -25,12 +25,12 @@ const validarCampos = (tarefa) => {
     !tarefa.endTime ||
     !tarefa.day
   ) {
-    mensagemErro.textContent = "⚠️ Preencha todos os campos obrigatórios.";
+    mensagemErro.textContent = "⚠ Preencha todos os campos obrigatórios.";
     return false;
   }
 
   if (tarefa.startTime >= tarefa.endTime) {
-    mensagemErro.textContent = "⚠️ Hora de início deve ser menor que a de término.";
+    mensagemErro.textContent = "⚠ Hora de início deve ser menor que a de término.";
     return false;
   }
 
@@ -47,6 +47,8 @@ const limparFormulario = () => {
 // Cria visualmente o card da tarefa
 const criarCardTarefa = (tarefa) => {
   const div = document.createElement("div");
+
+  // Corrigido: template literal com crase
   div.className = `task-card ${tarefa.urgencia} ${tarefa.realizada ? "realizada" : ""}`;
   div.setAttribute("tabindex", "0");
   div.setAttribute("aria-label", `Tarefa: ${tarefa.title}`);
@@ -93,6 +95,8 @@ const atualizarLista = () => {
     });
 
   const pendentes = tarefasFiltradas.filter((t) => !t.realizada).length;
+
+  // Corrigido: uso de template literal com crase
   resumoTarefas.textContent = `Mostrando ${tarefasFiltradas.length} tarefa(s). Pendentes: ${pendentes}.`;
 
   tarefasFiltradas.forEach((t) => {
@@ -178,30 +182,36 @@ const toggleDarkMode = () => {
   document.body.classList.toggle("dark-mode");
 };
 
-// Exporta as tarefas para PDF (usando jsPDF via CDN)
+// Exporta as tarefas para PDF
 const exportarPDF = () => {
-  import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then((jsPDFModule) => {
-    const { jsPDF } = jsPDFModule;
-    const doc = new jsPDF();
-    let y = 10;
+  const doc = new window.jspdf.jsPDF();
+  let y = 10;
 
-    doc.setFontSize(16);
-    doc.text("Tarefas Planejadas", 10, y);
-    y += 10;
+  doc.setFontSize(16);
+  doc.text("Tarefas Planejadas", 10, y);
+  y += 10;
 
-    tarefas.forEach((t, i) => {
-      const texto = `${i + 1}. ${t.title} (${t.day}) - ${t.startTime} às ${t.endTime} - ${t.area} - ${t.urgencia}`;
-      doc.setFontSize(10);
-      doc.text(texto, 10, y);
-      y += 6;
-      if (y > 280) {
-        doc.addPage();
-        y = 10;
-      }
-    });
+  tarefas.forEach((t, i) => {
+    // Corrigido: template literal com crase
+    const texto = `${i + 1}. ${t.title} (${t.day}) - ${t.startTime} às ${t.endTime} - ${t.area} - ${t.urgencia}`;
+    doc.setFontSize(10);
+    doc.text(texto, 10, y);
+    y += 6;
 
-    doc.save("tarefas.pdf");
+    if (t.obs && t.obs.trim() !== "") {
+      doc.setFontSize(9);
+      const linhas = doc.splitTextToSize(`Obs: ${t.obs}`, 180); // Corrigido
+      doc.text(linhas, 15, y);
+      y += linhas.length * 6;
+    }
+
+    if (y > 280) {
+      doc.addPage();
+      y = 10;
+    }
   });
+
+  doc.save("tarefas.pdf");
 };
 
 // Inicializa ao carregar a página
